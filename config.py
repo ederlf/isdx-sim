@@ -7,7 +7,7 @@ import json
 import util
 import copy 
 
-class GenConfig(object):
+class Config(object):
     def __init__(self, nmembers, npolicies, ribdump, path_templates = None):
         self.nmembers = nmembers
         self.npolicies = npolicies
@@ -21,9 +21,6 @@ class GenConfig(object):
         self.member_template = util.load_json_file(self.path_templates + "member.json")
         self.route_set = self.parse_routes()
         self.members = self.gen_ixp_members()
-
-    def generate(self):
-        # gen_ixp_config(members)
         self.gen_members_policies()
         self.gen_policy_file()
 
@@ -170,8 +167,9 @@ class GenConfig(object):
 
 
 def main():
-    g = GenConfig(9, 4, "routes.txt")
-    g.generate()
+    config = Config(9, 4, "routes.txt")
+    print (config.members)
+    print (config.route_set)
 
 if __name__ == "__main__":
     main()
