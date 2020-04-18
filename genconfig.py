@@ -20,11 +20,11 @@ class GenConfig(object):
         self.sdx_template = util.load_json_file(self.path_templates + "sdx.json")
         self.member_template = util.load_json_file(self.path_templates + "member.json")
         self.route_set = self.parse_routes()
+        self.members = self.gen_ixp_members()
 
     def generate(self):
-        members = self.gen_ixp_members()
         # gen_ixp_config(members)
-        self.gen_members_policies(members)
+        self.gen_members_policies()
         self.gen_policy_file()
 
     # Receives a file with routes that will be announced by respective peers
@@ -93,8 +93,8 @@ class GenConfig(object):
             mid += 1
         return members
 
-    def gen_members_policies(self, members):
-        for mid, member in members.items():
+    def gen_members_policies(self):
+        for mid, member in self.members.items():
             policies = {"outbound": list()}
             pid = 1
             while True:
@@ -148,7 +148,7 @@ class GenConfig(object):
         return update
 
     def gen_ixp_config(self, members):
-        self.sdx_template["Participants"] = members
+        self.sdx_template["Participants"] = self.members
         # I need to think how the topologies will look like
         # Right now there is just need for the SDX config
         # The topology configuration can be simplified for easier parsing too.
