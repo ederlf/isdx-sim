@@ -35,7 +35,7 @@ class Config(object):
     def parse_routes(self):
         f = open(self.ribdump, 'r')
         routes = f.readlines()
-        ips = IPNetwork('172.0.0.0/16')
+        ips = IPNetwork('172.0.0.0/16').iter_hosts()
 
         updates = []
         ases = {}
@@ -44,9 +44,9 @@ class Config(object):
         for route in routes:
             asn, prefix, path = route.strip('\n').split(';')
             if asn not in ases:
-                ases[asn] = ips.next()
+                ases[asn] = next(ips)
             ip = ases[asn]
-            update = {"ip": ip, "asn": asn, "prefix": prefix, "as_path":json.loads(path) }
+            update = {"ip": ip.__str__(), "asn": asn, "prefix": prefix, "as_path":json.loads(path) }
             updates.append(update)
 
         route_set["ases"] = ases
@@ -63,12 +63,12 @@ class Config(object):
         
         def create_member(mid, asn, peers, inbound, outbound, ports):
             member = copy.deepcopy(self.member_template)
-            member["ports"] = ports
-            member["asn"] = asn
-            member["peers"] = peers
-            member["inbound"] = inbound
-            member["outbound"] = outbound
-            member["flanc"] = "Part%sKey" % mid
+            member["Ports"] = ports
+            member["ASN"] = asn
+            member["Peers"] = peers
+            member["Inbound Rules"] = inbound
+            member["Outbound Rules"] = outbound
+            member["Flanc Key"] = "Part%sKey" % mid
             return member
 
         # Everyone peers at the route server, so there is a full mesh of peers
@@ -83,7 +83,7 @@ class Config(object):
             for route in routes:
                 if route["ip"] in nhops:
                     continue
-                member_ports.append({"id": port_num, "MAC": util.randomMAC(), "IP": route["ip"]})
+                member_ports.append({"Id": port_num, "MAC": util.randomMAC(), "IP": route["ip"]})
                 nhops.append(route["ip"])
                 port_num += 1
             members[str(mid)] = create_member(mid, route["asn"], full_mesh, False, True, member_ports)
@@ -97,13 +97,13 @@ class Config(object):
             while True:
                 if len(self.route_set["ases"]) < 10:
                     rand_members = random.sample(range(1, len(self.route_set["ases"])), self.nmembers-1)
-                    if any(x in member["ports"] for x in rand_members):
+                    if any(x in member["Ports"] for x in rand_members):
                         continue
                     else:
                         break
                 else:
                     rand_members = random.sample(range(1, len(self.route_set["ases"])), self.nmembers / 10)
-                    if any(x in member["ports"] for x in rand_members):
+                    if any(x in member["Ports"] for x in rand_members):
                         continue
                     else:
                         break
@@ -168,8 +168,8 @@ class Config(object):
 
 def main():
     config = Config(9, 4, "routes.txt")
-    print (config.members)
-    print (config.route_set)
+    # print (config.members)
+    # print (config.route_set)
 
 if __name__ == "__main__":
     main()
