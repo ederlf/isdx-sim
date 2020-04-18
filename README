@@ -1,3 +1,3 @@
-# ISDX flow simulator
+#ISDX flow table simulator
 
 A simulator to generate iSDX flows according to announced prefixes and policies of each IXP member.

@@ -19,12 +19,12 @@ class GenConfig(object):
         self.update_template = util.load_json_file(self.path_templates + "update.json")
         self.sdx_template = util.load_json_file(self.path_templates + "sdx.json")
         self.member_template = util.load_json_file(self.path_templates + "member.json")
+        self.route_set = self.parse_routes()
 
     def generate(self):
-        route_set = self.parse_routes()
-        members = self.gen_ixp_members(route_set)
+        members = self.gen_ixp_members()
         # gen_ixp_config(members)
-        self.gen_members_policies(route_set, members)
+        self.gen_members_policies(members)
         self.gen_policy_file()
 
     # Receives a file with routes that will be announced by respective peers
@@ -62,7 +62,7 @@ class GenConfig(object):
     # Every ASN is a unique participant
     # Get routes belonging to each participant
     # Every next hop belonging to the same participant gets its own port number on the IXP
-    def gen_ixp_members(self, route_set):
+    def gen_ixp_members(self):
         
         def create_member(mid, asn, peers, inbound, outbound, ports):
             member = copy.deepcopy(self.member_template)
@@ -75,14 +75,14 @@ class GenConfig(object):
             return member
 
         # Everyone peers at the route server, so there is a full mesh of peers
-        full_mesh = [i for i in range(1, len(route_set["ases"])+1)]
+        full_mesh = [i for i in range(1, len(self.route_set["ases"])+1)]
         mid = 1
         port_num = 4
         members = {}
-        for asn in route_set["ases"]:
+        for asn in self.route_set["ases"]:
             nhops = []
             member_ports = []
-            routes = [ i for i in route_set["updates"] if i["asn"] == asn ]
+            routes = [ i for i in self.route_set["updates"] if i["asn"] == asn ]
             for route in routes:
                 if route["ip"] in nhops:
                     continue
@@ -93,19 +93,19 @@ class GenConfig(object):
             mid += 1
         return members
 
-    def gen_members_policies(self, route_set, members):
+    def gen_members_policies(self, members):
         for mid, member in members.items():
             policies = {"outbound": list()}
             pid = 1
             while True:
-                if len(route_set["ases"]) < 10:
-                    rand_members = random.sample(range(1, len(route_set["ases"])), self.nmembers-1)
+                if len(self.route_set["ases"]) < 10:
+                    rand_members = random.sample(range(1, len(self.route_set["ases"])), self.nmembers-1)
                     if any(x in member["ports"] for x in rand_members):
                         continue
                     else:
                         break
                 else:
-                    rand_members = random.sample(range(1, len(route_set["ases"])), self.nmembers / 10)
+                    rand_members = random.sample(range(1, len(self.route_set["ases"])), self.nmembers / 10)
                     if any(x in member["ports"] for x in rand_members):
                         continue
                     else:
