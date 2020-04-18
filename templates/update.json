@@ -1,0 +1,1 @@
+{ "type": "update", "neighbor": { "ip": "172.0.0.21", "address": { "local": "172.0.255.254", "peer": "172.0.0.21"}, "asn": { "local": "65000", "peer": "300"}, "message": { "update": { "attribute": { "origin": "igp", "as-path": [ 300 ], "confederation-path": [], "med": 0 }, "announce": { "ipv4 unicast": {} } } }} }

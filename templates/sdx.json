@@ -1,0 +1,100 @@
+{
+    "Mode" : "Multi-Hop",
+
+    "VMAC" : {
+        "Mode": "Superset",
+        "Options": {
+                "Superset Bits": 30,
+                "Next Hop Bits": 16,
+                "Port Bits": 10,
+                "VMAC Size": 48
+        }
+    },
+
+    "RefMon Settings" : {
+        "fabric options": {
+                "dpids": {
+                        "edge-1": 1,
+                        "edge-2": 2,
+                        "edge-3": 3,
+                        "edge-4": 4,
+                        "core-1": 16,
+                        "core-2": 32,
+                        "core-3": 48,
+                        "core-4": 64
+                },
+                "tables": {
+                        "monitor":0, 
+                        "main-in": 1,
+                        "outbound": 2,
+                        "inbound": 3,
+                        "main-out": 4,
+                        "load-balancer":5,
+                        "umbrella-edge": 6,
+                        "umbrella-core": 1
+                },
+                "OF version": "1.3"
+        },
+
+        "fabric connections": {
+                "edge-1":{
+                    "core-1": 1,
+                    "core-2": 2,
+                    "core-3": 3,
+                    "core-4": 4,
+                    "1": 5
+                },
+                "edge-2":{
+                    "core-1": 1,
+                    "core-2": 2,
+                    "core-3": 3,
+                    "core-4": 4,
+                    "2": 5
+                },
+                "edge-3":{
+                    "core-1": 1,
+                    "core-2": 2,
+                    "core-3": 3,
+                    "core-4": 4,
+                    "3": 5
+                },
+                "edge-4":{
+                    "core-1": 1,
+                    "core-2": 2,
+                    "core-3": 3,
+                    "core-4": 4,
+                    "3": 5
+                },
+                "core-1":{
+                    "edge-1": 1,
+                    "edge-2": 2,
+                    "edge-3": 3,
+                    "edge-4": 4
+                },
+                "core-2":{
+                    "edge-1": 1,
+                    "edge-2": 2,
+                    "edge-3": 3,
+                    "edge-4": 4
+                },
+                "core-3":{
+                    "edge-1": 1,
+                    "edge-2": 2,
+                    "edge-3": 3,
+                    "edge-4": 4
+                },
+                "core-4":{
+                    "edge-1": 1,
+                    "edge-2": 2,
+                    "edge-3": 3,
+                    "edge-4": 4
+                }
+        }
+    },
+
+    "VNHs": "172.0.1.1/24",
+
+    "Participants": {
+
+    }
+}
