@@ -29,7 +29,6 @@ class Switch(object):
                     break
             
             if delete:
-                # print("REMOVE")
                 str_match = json.dumps(table_flow["match"])
                 del self.tables[table][str_match]
 
@@ -97,12 +96,4 @@ class MultiHopTopo(object):
         
     def num_flows_per_core(self):
         return {sw:self.cores[sw].total_table_flows("inbound") for sw in self.cores}
-
-
-
-# topo = MultiHopTopo(4, 4)
-# edges = topo.get_edge_distribution(1000)
-# edge1 = list(filter(lambda x: x == "edge1", edges))
-# edge2 = list(filter(lambda x: x == "edge2", edges))
-# print (len((edge1)), len(edge2))
             

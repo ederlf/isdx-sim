@@ -68,7 +68,6 @@ class Config(object):
 
         return route_set
     
-
     # Every ASN is a unique participant
     # Get routes belonging to each participant
     # Every next hop belonging to the same participant gets its own port number on the IXP
@@ -153,32 +152,8 @@ class Config(object):
             #     pfile.close()
 
 
-    def gen_ixp_config(self, members):
-        self.sdx_template["Participants"] = self.members
-        # I need to think how the topologies will look like
-        # Right now there is just need for the SDX config
-        # The topology configuration can be simplified for easier parsing too.
-
-        # mainSwFabricConnections = dict()
-        # for participantId, participant in participants.iteritems():
-        #     ports = [ port["Id"] for port in participant["Ports"]]
-        #     if len(ports) <= 1:
-        #         ports = ports[0]
-        #     mainSwFabricConnections[participantId] = ports
-        # mainSwFabricConnections["arp"] = 1
-        # mainSwFabricConnections["route server"] = 2
-        # mainSwFabricConnections["refmon"] = 3
-        # self.sdx_template["RefMon Settings"]["fabric connections"]["main"] = mainSwFabricConnections
-        # self.sdx_template["VNHs"] = "10.0.0.1/8"
-        # with open('%s/examples/test-mtsim/config/sdx_global.cfg' % args.path, 'w') as configFile:
-        #     configFile.write(json.dumps(self.sdx_template, indent=4))
-        #     configFile.close()
-
-
 def main():
     config = Config(9, 4, "routes.txt")
-    # print (config.members)
-    # print (config.route_set)
 
 if __name__ == "__main__":
     main()
