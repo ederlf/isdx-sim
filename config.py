@@ -22,7 +22,6 @@ class Config(object):
         self.route_set = self.parse_routes()
         self.members = self.gen_ixp_members()
         self.gen_members_policies()
-        self.gen_policy_file()
 
     # Receives a file with routes that will be announced by respective peers
     # The format of the file must be as follows:
@@ -33,6 +32,20 @@ class Config(object):
     # AS_PATH: the path to reach the prefix from the ASN. 
     # For now, no support for communities or MED. It should be easy to add. 
     def parse_routes(self):
+        
+        def create_update(ip, asn, prefix, as_path, community = None, med = None):
+            update = copy.deepcopy(self.update_template)
+            update["neighbor"]["ip"] = ip
+            update["neighbor"]["address"]["peer"] = ip
+            update["neighbor"]["asn"]["peer"] = asn
+            update["neighbor"]["message"]["update"]["attribute"]["as-path"] = as_path
+            if community: update["neighbor"]["message"]["update"]["attribute"]["community"] = community
+            if med: update["neighbor"]["message"]["update"]["attribute"]["med"] = med
+            update["neighbor"]["message"]["update"]["announce"]["ipv4 unicast"][ip] = {}
+            update["neighbor"]["message"]["update"]["announce"]["ipv4 unicast"][ip][prefix] = {}
+            bgp_msg = {"bgp": update}
+            return bgp_msg
+
         f = open(self.ribdump, 'r')
         routes = f.readlines()
         ips = IPNetwork('172.0.0.0/16').iter_hosts()
@@ -45,8 +58,8 @@ class Config(object):
             asn, prefix, path = route.strip('\n').split(';')
             if asn not in ases:
                 ases[asn] = next(ips)
-            ip = ases[asn]
-            update = {"ip": ip.__str__(), "asn": asn, "prefix": prefix, "as_path":json.loads(path) }
+            ip = str(ases[asn])
+            update = create_update(ip, asn, prefix, json.loads(path))
             updates.append(update)
 
         route_set["ases"] = ases
@@ -62,7 +75,10 @@ class Config(object):
     def gen_ixp_members(self):
         
         def create_member(mid, asn, peers, inbound, outbound, ports):
-            member = copy.deepcopy(self.member_template)
+            member = {}
+            member["Mode"] = self.sdx_template["Mode"]
+            member["VMAC"] = self.sdx_template["VMAC"]
+            member["VNHs"] = self.sdx_template["VNHs"]
             member["Ports"] = ports
             member["ASN"] = asn
             member["Peers"] = peers
@@ -71,23 +87,32 @@ class Config(object):
             member["Flanc Key"] = "Part%sKey" % mid
             return member
 
+
         # Everyone peers at the route server, so there is a full mesh of peers
         full_mesh = [i for i in range(1, len(self.route_set["ases"])+1)]
         mid = 1
         port_num = 4
         members = {}
+        all_nhops = {}
         for asn in self.route_set["ases"]:
-            nhops = []
+            nhops = set()
             member_ports = []
-            routes = [ i for i in self.route_set["updates"] if i["asn"] == asn ]
+            updates = self.route_set["updates"]
+            routes = [ i for i in updates if i["bgp"]["neighbor"]["asn"]["peer"] == asn ]
             for route in routes:
-                if route["ip"] in nhops:
+                route_ip = route["bgp"]["neighbor"]["ip"]
+                if route_ip  in nhops:
                     continue
-                member_ports.append({"Id": port_num, "MAC": util.randomMAC(), "IP": route["ip"]})
-                nhops.append(route["ip"])
+                member_ports.append({"Id": port_num, "MAC": util.randomMAC(), "IP": route_ip})
+                nhops.add(route_ip)
+                all_nhops[route_ip] = mid
                 port_num += 1
-            members[str(mid)] = create_member(mid, route["asn"], full_mesh, False, True, member_ports)
+            members[str(mid)] = create_member(mid, asn, full_mesh, False, True, member_ports)
             mid += 1
+
+        for m in members:
+            members[m]["Next Hops"] = all_nhops
+
         return members
 
     def gen_members_policies(self):
@@ -122,27 +147,11 @@ class Config(object):
                     })
                     pid += 1
 
-            with open('policies/participant_%s.py' % (mid), 'w') as pfile:
-                pfile.write(json.dumps(policies, indent=4))
-                pfile.close()
+            self.members[mid]["Policies"] = policies
+            # with open('policies/participant_%s.py' % (mid), 'w') as pfile:
+            #     pfile.write(json.dumps(policies, indent=4))
+            #     pfile.close()
 
-    def gen_policy_file(self):
-        with open('config/sdx_policies.cfg', 'w') as pfile:
-            pfile.write(json.dumps({ str(i): 'participant_%s.py' % str(i) for i in range(1, self.nmembers + 1) }))
-            pfile.close()
-
-
-    def create_update(self, ip, asn, prefix, as_path, community = None, med = None):
-        update = copy.deepcopy(self.update_template)
-        update["neighbor"]["ip"] = ip
-        update["neighbor"]["address"]["peer"] = ip
-        update["neighbor"]["asn"]["peer"] = asn
-        update["neighbor"]["message"]["update"]["attribute"]["as-path"] = as_path
-        if community: update["neighbor"]["message"]["update"]["attribute"]["community"] = community
-        if med: update["neighbor"]["message"]["update"]["attribute"]["med"] = med
-        update["neighbor"]["message"]["update"]["announce"]["ipv4 unicast"][ip] = {}
-        update["neighbor"]["message"]["update"]["announce"]["ipv4 unicast"][ip][prefix] = {}
-        return update
 
     def gen_ixp_config(self, members):
         self.sdx_template["Participants"] = self.members
