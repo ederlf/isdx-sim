@@ -237,7 +237,6 @@ class PCtrl(object):
         # reset flow_mods after send - self.flow_mods = []
         self.fm_builder.reset_flow_mod()
 
-        print (flows, len(flows))
 
     def process_event(self, data, mod_type=None):  
         "Locally process each incoming network event"
@@ -474,8 +473,7 @@ class PCtrl(object):
             self.logger.debug("Time taken to push dp msgs: "+str(elapsed))
             tstart = time.time()
 
-        changed_vnhs, announcements = self.bgp_instance.bgp_update_peers(updates,
-                self.prefix_2_VNH, self.cfg.ports)
+        changed_vnhs, announcements = self.bgp_instance.bgp_update_peers(updates, self.prefix_2_VNH, self.cfg.ports)
 
         """ Combine the VNHs which have changed BGP default routes with the
             VNHs which have changed supersets.
@@ -568,34 +566,7 @@ def get_prefixes_from_announcements(route):
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('dir', help='the directory of the example')
-    parser.add_argument('id', type=int,
-                   help='participant id (integer)')
-    args = parser.parse_args()
-
-    # locate config file
-    # TODO: Separate the config files for each participant
-    base_path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                "..","examples",args.dir,"config"))
-    config_file = os.path.join(base_path, "sdx_global.cfg")
-
-    # locate the participant's policy file as well
-    policy_filenames_file = os.path.join(base_path, "sdx_policies.cfg")
-    with open(policy_filenames_file, 'r') as f:
-        policy_filenames = json.load(f)
-    policy_filename = policy_filenames[str(args.id)]
-
-    policy_path = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                            "..","examples",args.dir,"policies"))
-
-    policy_file = os.path.join(policy_path, policy_filename)
-
-    logger = log.getLogger("P_" + str(args.id))
-
-    logger.info("Starting controller with config file: "+str(config_file))
-    logger.info("and policy file: "+str(policy_file))
-
+    pass
 
 if __name__ == '__main__':
     main()
