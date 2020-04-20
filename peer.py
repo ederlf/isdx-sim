@@ -41,7 +41,7 @@ class BGPPeer(object):
 
         route_list = []
         # Extract out neighbor information in the given BGP update
-        print (route)
+    
         neighbor = route["neighbor"]["ip"]
         #self.logger.debug('==>>> '+str(neighbor)+' '+str(route))
 

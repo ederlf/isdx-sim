@@ -151,19 +151,6 @@ class PCtrl(object):
 
         self.fm_builder = FlowModMsgBuilder(self.id)
 
-
-    def xstart(self):
-        # Start all clients/listeners/whatevs
-        self.logger.info("Starting controller for participant")
-
-        
-         # class for building flow mod msgs to the reference monitor
-        
-
-        # Send flow rules for initial policies to the SDX's Reference Monitor
-        self.initialize_dataplane()
-        self.push_dp()
-
     def sanitize_policies(self, policies):
 
         port_count = len(self.cfg.ports)
@@ -194,7 +181,7 @@ class PCtrl(object):
         self.logger.info("Initializing inbound rules")
 
         final_switch = "main-in"
-        if self.cfg.isMultiTableMode():
+        if self.cfg.isMultiTableMode() or self.cfg.isMultiHopMode():
             final_switch = "main-out"
 
         self.init_vnh_assignment()
@@ -234,8 +221,12 @@ class PCtrl(object):
 
         flows = self.fm_builder.get_msg()
         
-        # reset flow_mods after send - self.flow_mods = []
         self.fm_builder.reset_flow_mod()
+
+        return flows
+        
+        # reset flow_mods after send - self.flow_mods = []
+        
 
 
     def process_event(self, data, mod_type=None):  
@@ -246,7 +237,7 @@ class PCtrl(object):
             route = data['bgp']
             # Process the incoming BGP updates from XRS
             #self.logger.debug("BGP Route received: "+str(route)+" "+str(type(route)))
-            self.process_bgp_route(route)
+            return self.process_bgp_route(route)
 
         elif 'policy' in data:
             # Process the event requesting change of participants' policies
@@ -466,7 +457,6 @@ class PCtrl(object):
             # TODO: similar logic for MDS
             self.logger.debug("Creating ctrlr messages for MDS scheme")
 
-        self.push_dp()
 
         if TIMING:
             elapsed = time.time() - tstart
@@ -496,12 +486,7 @@ class PCtrl(object):
             self.logger.debug("Time taken to send garps/announcements: "+str(elapsed))
             tstart = time.time()
 
-
-    def send_announcement(self, announcement):
-        "Send the announcements to XRS"
-        self.logger.debug("Sending announcements to XRS: %s", announcement)
-        self.xrs_client.send({'msgType': 'bgp', 'announcement': announcement})
-
+        return self.push_dp()
 
     def vnh_assignment(self, update):
         "Assign VNHs for the advertised prefixes"
@@ -530,7 +515,7 @@ class PCtrl(object):
             " Superset"
             # TODO: Do we really need to assign a VNH for each advertised prefix?
             #self.bgp_instance.rib["local"].dump()
-            prefixes = self.bgp_instance.rib["local"].get_prefixes()
+            prefixes = self.bgp_instance.rib.get_local_prefixes()
             #print 'init_vnh_assignment: prefixes:', prefixes
             #print 'init_vnh_assignment: prefix_2_VNH:', self.prefix_2_VNH
             for prefix in prefixes:
