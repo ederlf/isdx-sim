@@ -120,7 +120,7 @@ class Config(object):
                     else:
                         break
                 else:
-                    rand_members = random.sample(range(1, len(self.route_set["ases"])), self.nmembers / 10)
+                    rand_members = random.sample(range(1, len(self.route_set["ases"])), int(self.nmembers / 10))
                     if any(x in member["Ports"] for x in rand_members):
                         continue
                     else:
