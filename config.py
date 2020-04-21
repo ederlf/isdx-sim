@@ -78,7 +78,7 @@ class Config(object):
             member = {}
             member["Mode"] = self.sdx_template["Mode"]
             member["VMAC"] = self.sdx_template["VMAC"]
-            member["VNHs"] = self.sdx_template["VNHs"]
+            member["VNHs"] = "10.0.0.1/8"
             member["Ports"] = ports
             member["ASN"] = asn
             member["Peers"] = peers
