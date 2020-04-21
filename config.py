@@ -56,9 +56,10 @@ class Config(object):
         
         for route in routes:
             asn, prefix, path = route.strip('\n').split(';')
+            # TODO: consider adding multiple ports for an AS. Now it does not make much of a difference.
             if asn not in ases:
-                ases[asn] = next(ips)
-            ip = str(ases[asn])
+                ases[asn] = str(next(ips)) 
+            ip = ases[asn]
             update = create_update(ip, asn, prefix, json.loads(path))
             updates.append(update)
 
@@ -94,19 +95,12 @@ class Config(object):
         members = {}
         all_nhops = {}
         for asn in self.route_set["ases"]:
-            nhops = set()
             member_ports = []
-            updates = self.route_set["updates"]
-            routes = [ i for i in updates if i["bgp"]["neighbor"]["asn"]["peer"] == asn ]
-            for route in routes:
-                route_ip = route["bgp"]["neighbor"]["ip"]
-                if route_ip  in nhops:
-                    continue
-                member_ports.append({"Id": port_num, "MAC": util.randomMAC(), "IP": route_ip})
-                nhops.add(route_ip)
-                all_nhops[route_ip] = mid
-                port_num += 1
+            ip = self.route_set["ases"][asn]
+            member_ports.append({"Id": port_num, "MAC": util.randomMAC(), "IP": ip})
             members[str(mid)] = create_member(mid, asn, full_mesh, False, True, member_ports)
+            port_num += 1
+            all_nhops[ip] = mid
             mid += 1
 
         for m in members:
