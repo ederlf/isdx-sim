@@ -53,11 +53,14 @@ class Config(object):
         updates = []
         ases = {}
         route_set = {}
-        
+        total = 0
+        # This code assumes routes are organized in blocks per AS
         for route in routes:
             asn, prefix, path = route.strip('\n').split(';')
             # TODO: consider adding multiple ports for an AS. Now it does not make much of a difference.
             if asn not in ases:
+                if len(ases) > self.nmembers:
+                    break
                 ases[asn] = str(next(ips)) 
             ip = ases[asn]
             update = create_update(ip, asn, prefix, json.loads(path))
@@ -102,8 +105,6 @@ class Config(object):
             port_num += 1
             all_nhops[ip] = mid
             mid += 1
-            if len(members) == self.nmembers:
-                break
 
         for m in members:
             members[m]["Next Hops"] = all_nhops
