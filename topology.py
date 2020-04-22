@@ -66,11 +66,16 @@ class MultiHopTopo(object):
         size = len(probs)
 
         edges = list(self.edges.keys())
-        if not size:
-            return np.random.choice(edges, nmembers)
+        while True:
+            if not size:
+                dist = np.random.choice(edges, nmembers)
 
+            # Guarantee that all switches will have members allocated 
+            if set(edges) == set(dist):
+                    return dist
+  
         if len(self.edges) == size:
-            return np.random.choice(edges, nmembers, p=probs)
+            dist = np.random.choice(edges, nmembers, p=probs)
 
         return None
 
