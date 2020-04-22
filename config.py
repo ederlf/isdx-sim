@@ -102,6 +102,8 @@ class Config(object):
             port_num += 1
             all_nhops[ip] = mid
             mid += 1
+            if len(members) == self.nmembers:
+                break
 
         for m in members:
             members[m]["Next Hops"] = all_nhops
