@@ -66,7 +66,7 @@ class Config(object):
             asn, prefix, path = route.strip('\n').split(';')
             # TODO: consider adding multiple ports for an AS. Now it does not make much of a difference.
             if asn not in ases:
-                if len(ases) > self.nmembers:
+                if len(ases) == self.nmembers:
                     break
                 ases[asn] = str(next(ips)) 
             ip = ases[asn]
@@ -160,7 +160,6 @@ class Config(object):
             tot += len(policies["outbound"])
             if int(mid) == self.member_cap:
                 break
-        print(tot)
             # with open('policies/participant_%s.py' % (mid), 'w') as pfile:
             #     pfile.write(json.dumps(policies, indent=4))
             #     pfile.close()

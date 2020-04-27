@@ -14,6 +14,12 @@ def create_pctrl(mid, config):
 def dict_str(d):
     return ','.join("{}:{}".format(k, v) for k, v in d.items())
 
+def flows_per_member(topo, pctrl, updates):
+    for update in updates:
+        flows = pctrl.process_event(update)
+        topo.handle_flows(flows)
+    return sum(topo.num_flows_per_edge().values())
+
 def main():
 
     parser = argparse.ArgumentParser(description="Simulates iSDX generation of flows according to BGP announcements and configured outbound policies")
@@ -27,7 +33,7 @@ def main():
                         help="Path to the template files")
     
     args = parser.parse_args()
-    config = Config(args.members, args.max_policies, args.routes, True)
+    config = Config(args.members, args.max_policies, args.routes, False)
 
     # TODO: Add number of edges and cores as running parameters.
     topo = MultiHopTopo(config.members, args.max_edges, 4)
@@ -40,7 +46,6 @@ def main():
     for i, m in enumerate(config.members):
         for port in config.members[m]["Ports"]:
             port["switch"] = edge_dist[i]
-            # print(m, edge_dist[i])
             if edge_dist[i] not in memxedges:
                 memxedges[edge_dist[i]] = 0
             memxedges[edge_dist[i]] += 1
@@ -48,13 +53,21 @@ def main():
     # Create Participant Controllers from config.members
     pctrls = [create_pctrl(mid, config.members[mid]) for mid in list(config.members.keys())[0:config.member_cap]]
     updates =  config.route_set["updates"]
-
-    for update in updates:
-        for pctrl in pctrls:
-            flows = pctrl.process_event(update)
-            topo.handle_flows(flows)
-    print("%s;%s;%s" % (args.members, dict_str(memxedges), dict_str(topo.num_flows_per_edge() )))
-    print(sum(topo.num_flows_per_edge().values()))
+    flow_cnt = {x:0 for x in config.members}
+    f = open("res-per-member/%s-%s" % (args.members, args.max_policies), 'w')
+    for pctrl in pctrls:
+        flow_cnt[pctrl.id] += flows_per_member(topo, pctrl, updates)
+        f.write("%s;%s\n" % (pctrl.id, flow_cnt[pctrl.id]))
+        topo.reset_switches()
+    f.close()
+    #for mid in flow_cnt:
+    #    print("%s;%s" % (mid, flow_cnt[mid]))
+    #for update in updates:
+    #    for pctrl in pctrls:
+    #        flows = pctrl.process_event(update)
+    #        topo.handle_flows(flows)
+    #print("%s;%s;%s" % (args.members, dict_str(memxedges), dict_str(topo.num_flows_per_edge() )))
+    #print(sum(topo.num_flows_per_edge().values()))
 
 if __name__ == "__main__": 
     main()

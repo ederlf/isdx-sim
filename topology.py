@@ -7,6 +7,10 @@ class Switch(object):
         self.name = name
         self.tables = {n:{} for n in tables}
         # self.arg = arg
+    
+    def reset_tables(self):
+        for t in self.tables:
+            self.tables[t].clear()
         
     def add_flow(self, flow):
         match = json.dumps(flow["match"])
@@ -78,6 +82,13 @@ class MultiHopTopo(object):
             dist = np.random.choice(edges, nmembers, p=probs)
 
         return None
+
+    def reset_switches(self):
+        for sw in self.edges:
+            self.edges[sw].reset_tables() 
+
+        for sw in self.cores:
+            self.cores[sw].reset_tables()
 
     def handle_flows(self, flows):
         member = flows["auth_info"]["participant"]
