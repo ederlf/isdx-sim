@@ -8,20 +8,27 @@ import util
 import copy 
 
 class Config(object):
-    def __init__(self, nmembers, npolicies, ribdump, path_templates = None):
+    def __init__(self, nmembers, npolicies, ribdump, rnd_policies = True, member_cap = None, path_templates = None):
         self.nmembers = nmembers
         self.npolicies = npolicies
         self.ribdump = ribdump
+        self.rnd_policies = rnd_policies
         if path_templates:
             self.path_templates = path_templates
         else:
             self.path_templates = "templates/"
+
+        if member_cap:
+            self.member_cap = member_cap
+        else:
+            self.member_cap = self.nmembers
+
         self.update_template = util.load_json_file(self.path_templates + "update.json")
         self.sdx_template = util.load_json_file(self.path_templates + "sdx.json")
-        self.member_template = util.load_json_file(self.path_templates + "member.json")
         self.route_set = self.parse_routes()
         self.members = self.gen_ixp_members()
         self.gen_members_policies()
+
 
     # Receives a file with routes that will be announced by respective peers
     # The format of the file must be as follows:
@@ -112,6 +119,7 @@ class Config(object):
         return members
 
     def gen_members_policies(self):
+        tot = 0
         for mid, member in self.members.items():
             policies = {"outbound": list()}
             pid = 1
@@ -130,7 +138,12 @@ class Config(object):
                         break
 
             for member_policy in rand_members:
-                for npolicies in range(0, random.randint(1, self.npolicies)):
+                if self.rnd_policies:
+                    total_pol = random.randint(1, self.npolicies)
+                else:
+                    total_pol = self.npolicies
+
+                for npolicies in range(0, total_pol):
                     rand_port = random.randint(1, 65536)
                     policies["outbound"].append({
                         "cookie": pid,
@@ -144,6 +157,10 @@ class Config(object):
                     pid += 1
 
             self.members[mid]["Policies"] = policies
+            tot += len(policies["outbound"])
+            if int(mid) == self.member_cap:
+                break
+        print(tot)
             # with open('policies/participant_%s.py' % (mid), 'w') as pfile:
             #     pfile.write(json.dumps(policies, indent=4))
             #     pfile.close()
