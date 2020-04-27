@@ -116,7 +116,7 @@ class SuperSets(object):
 
                     sdx_msgs = {"type": "new", "changes": []}
 
-                    for superset in self.supersets:
+                    for superset_index, superset in enumerate(self.supersets):
                         for participant in superset:
                             sdx_msgs["changes"].append({"participant_id": participant,
                                 "superset": superset_index,

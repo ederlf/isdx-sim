@@ -16,8 +16,9 @@ class Switch(object):
     def del_flow(self, flow):
         del_match = flow["match"]
         table = flow["rule_type"]
-        for table_flow in self.tables[table]:
-            flow_match = self.tables[table][table_flow]["match"]
+        str_matches = list(self.tables[table].keys())
+        for str_match in str_matches:
+            flow_match = self.tables[table][str_match]["match"]
             delete = True
             for field in del_match:
                 if field not in flow_match:
@@ -29,7 +30,6 @@ class Switch(object):
                     break
             
             if delete:
-                str_match = json.dumps(table_flow["match"])
                 del self.tables[table][str_match]
 
     def process_flow(self, flow):
